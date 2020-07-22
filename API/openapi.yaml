@@ -1,0 +1,902 @@
+openapi: 3.0.0
+info:
+  title: Grandma's Recipes and Others!
+  description: API for Grandma's Recipes and Others!
+  version: 1.0.2
+servers:
+- url: https://app.swaggerhub.com/apis/lironoskar/assignment3-1-shir_liron/1.0.2
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: auth
+  description: All authentication related routes
+- name: user
+  description: All the user's personal app into
+- name: recipes
+  description: All recipes general info
+paths:
+  /Register:
+    post:
+      tags:
+      - auth
+      description: register to the web.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body'
+        required: true
+      responses:
+        "201":
+          description: User registation successfully.
+        "409":
+          description: Username taken.
+  /login:
+    post:
+      tags:
+      - auth
+      description: A JSON object containting the username and password.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/body_1'
+        required: true
+      responses:
+        "200":
+          description: |
+            User authenitcated successfully. The session ID id returned in a cookie named 'session'. You need to include this cookie in subsequent requests
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: session=87s97sdhgf279293f8w0e9
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "401":
+          description: Username or Password incorrect
+  /logout:
+    post:
+      tags:
+      - auth
+      description: log out from the web.
+      responses:
+        "200":
+          description: User log out successfully.
+      security:
+      - cookieAuth: []
+  /recipes/search/query/:searchQuery/amount/:num:
+    get:
+      tags:
+      - recipes
+      description: Search for a recipepie in spoonacular API, using a search query.
+        will return results according to number param. Can filter resutld by Cusine,
+        diet, intolerance.
+      parameters:
+      - name: searchQuery
+        in: path
+        description: The search query for searching a query in the API
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: num
+        in: path
+        description: Number of search resultls to retrieve
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          default: 5
+          enum:
+          - 5
+          - 10
+          - 15
+      - name: cuisine
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/Cuisine'
+      - name: diet
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/Diet'
+      - name: intolerances
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/Intolerances'
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_1'
+        "205":
+          description: No recipes found for the search params
+        "500":
+          description: Page not found.
+  /recipes/randomRecipes:
+    get:
+      tags:
+      - recipes
+      description: |
+        Main Recipes Page, showing 3 random recipes and  3 recent recipes viewed by a connected user.
+      responses:
+        "200":
+          description: Successful
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_1'
+        "500":
+          description: Page not found.
+  /recipes/show/:id:
+    get:
+      tags:
+      - recipes
+      description: Get the recipe information by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          example: 2
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_2'
+        "205":
+          description: No recipes found
+        "500":
+          description: Page not found.
+  /recipes/recipeInfo/:ids:
+    get:
+      tags:
+      - recipes
+      description: Get information about recipe.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          example: 2
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_1'
+        "500":
+          description: Page not found.
+  /user/recipeInfo/:ids:
+    get:
+      tags:
+      - user
+      description: Get the user's app info on recipes bt their ids
+      parameters:
+      - name: ids
+        in: path
+        description: Reciped ids array, for returning user data
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: array
+          items:
+            type: integer
+      responses:
+        "200":
+          description: Object with the user info foreach of the sended ids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_3'
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/lastWatchedRecipes:
+    get:
+      tags:
+      - user
+      description: |
+        Returns 3 recent recipes  the user has viewed there
+      responses:
+        "200":
+          description: Object with the user info foreach of the sended ids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_4'
+        "205":
+          description: There are no recently viewed recipes
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/myFavorites:
+    get:
+      tags:
+      - user
+      description: |
+        Returns the recipes the  user has saved to favorites
+      responses:
+        "200":
+          description: Object with the user info foreach of the sended ids
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_4'
+        "205":
+          description: You don't have any favorite recipe.
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/addFavorite/:id:
+    put:
+      tags:
+      - user
+      description: add favorite recipe to the user list
+      parameters:
+      - name: id
+        in: path
+        description: recipe id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Done successfully
+        "500":
+          description: recipe not found
+      security:
+      - cookieAuth: []
+  /user/removeFavorite/:id:
+    put:
+      tags:
+      - user
+      description: remove favorite recipe from the user list
+      parameters:
+      - name: id
+        in: path
+        description: recipe id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Done successfully
+        "500":
+          description: recipe not found
+      security:
+      - cookieAuth: []
+  /user/addWatched/:id:
+    put:
+      tags:
+      - user
+      description: add recipe to the user list watched
+      parameters:
+      - name: id
+        in: path
+        description: recipe id
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: Added successfully
+        "500":
+          description: recipe not found
+      security:
+      - cookieAuth: []
+  /user/myRecipes:
+    get:
+      tags:
+      - user
+      description: |
+        Returns the user's personal recipes
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_5'
+        "205":
+          description: You don't have personal recipes.
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/myFamilyRecipes:
+    get:
+      tags:
+      - user
+      description: |
+        Returns the user's family recipes
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_6'
+        "205":
+          description: You don't have famliy recipes
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/showMyRecipe/:id:
+    get:
+      tags:
+      - user
+      description: Get my recipe information by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          example: 111
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_7'
+        "205":
+          description: No recipes found
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/showMyFamliyRecipe/:id:
+    get:
+      tags:
+      - user
+      description: Get my family recipe information by id.
+      parameters:
+      - name: id
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+          example: 111
+      responses:
+        "200":
+          description: informations about the recipe id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_8'
+        "205":
+          description: No recipes found
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/allWatchedRecipes:
+    get:
+      tags:
+      - user
+      description: Returns all the recipes that the user has watched.
+      responses:
+        "200":
+          description: Object with the recipe that the uswr watched.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/inline_response_200_9'
+        "205":
+          description: There are no recently viewed recipes.
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+  /user/getPorfilePicture:
+    get:
+      tags:
+      - user
+      description: Return propilr picture.
+      responses:
+        "200":
+          description: propule picture URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  image: https://res.cloudinary.com/dfhrbnvty/image/upload/v1591787513/propile_anfsci.jpg
+        "205":
+          description: No found.
+        "500":
+          description: Page not found.
+      security:
+      - cookieAuth: []
+components:
+  schemas:
+    RecipeInfo:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: pizza
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 45
+        aggregateLikes:
+          type: integer
+          example: 205
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: pizza.jpg
+        servings:
+          type: integer
+          example: 2
+        instructions:
+          type: string
+          example: with LOVE.
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeInfo_ingredients'
+    MyRecipeInfo:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: shaksoka
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 10
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: shaksoka.jpg
+        severalServings:
+          type: integer
+          example: 3
+        instructions:
+          type: string
+          example: with LOVE.
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyRecipeInfo_ingredients'
+    FamilyRecipeInfo:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: pizza
+        family_member:
+          type: string
+          description: A family member who created the recipe
+          example: Grandma Sara
+        whenMakeIt:
+          type: string
+          description: At which time the recipe is prepared
+          example: At Passover
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 45
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: pizza.jpg
+        severalServings:
+          type: integer
+          example: 2
+        instructions:
+          type: string
+          example: with LOVE.
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeInfo_ingredients'
+    RecipePreview:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: pizza
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 45
+        aggregateLikes:
+          type: integer
+          example: 205
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: pizza.jpg
+    PriviewFamliyRecipe:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: pizza
+        family_member:
+          type: string
+          description: A family member who created the recipe
+          example: Grandma Sara
+        whenMakeIt:
+          type: string
+          description: At which time the recipe is prepared
+          example: At Passover
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 45
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: pizza.jpg
+    PriviewPrivateRecipe:
+      type: object
+      properties:
+        title:
+          type: string
+          description: The recipe title
+          example: pizza
+        readyInMinutes:
+          type: integer
+          description: Reciepe ready duration in minutes
+          example: 45
+        vegeterian:
+          type: boolean
+          example: true
+        vegan:
+          type: boolean
+          example: false
+        glutenFree:
+          type: boolean
+          example: false
+        image:
+          type: string
+          description: The reciepe image url
+          example: pizza.jpg
+    Cuisine:
+      type: string
+      enum:
+      - African
+      - American
+      - British
+      - Cajun
+      - Caribbean
+      - Chinese
+      - Eastern European
+      - European
+      - French
+      - German
+      - Greek
+      - Indian
+      - Irish
+      - Italian
+      - Japanese
+      - Jewish
+      - Korean
+      - Latin American
+      - Mediterranean
+      - Mexican
+      - Middle Eastern
+      - Nordic
+      - Southern
+      - Spanish
+      - Thai
+      - Vietnamese
+    Diet:
+      type: string
+      enum:
+      - Gluten Free
+      - Ketogenic
+      - Vegetarian
+      - Lacto-Vegetarian
+      - Ovo-Vegetarian
+      - Vegan
+      - Pescetarian
+      - Paleo
+      - Primal
+      - Whole30
+    Intolerances:
+      type: string
+      enum:
+      - Dairy
+      - Egg
+      - Gluten
+      - Grain
+      - Peanut
+      - Seafood
+      - Sesame
+      - Shellfish
+      - Soy
+      - Sulfite
+      - Tree Nut
+      - Wheat
+    body:
+      type: object
+      properties:
+        username:
+          maxLength: 8
+          minLength: 3
+          type: string
+          description: Contain only letters
+        firstname:
+          type: string
+          description: Contain only letters
+        lastname:
+          type: string
+          description: Contain only letters
+        country:
+          type: string
+        passowrd:
+          maxLength: 10
+          minLength: 5
+          type: string
+          description: Contains letters with at least 1 numerical character and 1
+            special characters
+        confirmationpassowrd:
+          maxLength: 10
+          minLength: 5
+          type: string
+          description: Contains letters with at least 1 numerical character and 1
+            special characters
+        email:
+          type: string
+          format: email
+        image:
+          type: string
+          format: url
+      example:
+        username: liron
+        firstname: liron
+        lastname: ben yakov
+        country: Israel
+        password: 1!23456
+        confirmationpassowrd: 1!23456
+        email: liron@gmail.com
+        image: https://i.pinimg.com/originals/89/38/10/89381032bc1fe8a614cb021f19736372.jpg
+    body_1:
+      type: object
+      properties:
+        username:
+          maxLength: 8
+          minLength: 3
+          type: string
+          description: Contain only letters
+        passowrd:
+          maxLength: 10
+          minLength: 5
+          type: string
+          description: Contains letters with at least 1 numerical character and 1
+            special characters
+      example:
+        username: liron
+        password: 1!23456
+    inline_response_200:
+      required:
+      - saved
+      - watched
+      type: object
+      properties:
+        message:
+          type: string
+        success:
+          type: boolean
+      example:
+        message: login succeeded
+        success: true
+    inline_response_200_1:
+      type: object
+      properties:
+        "2":
+          $ref: '#/components/schemas/RecipePreview'
+    inline_response_200_2:
+      type: object
+      properties:
+        "2":
+          $ref: '#/components/schemas/RecipeInfo'
+    inline_response_200_3:
+      required:
+      - favorite
+      - watched
+      type: object
+      properties:
+        watched:
+          type: boolean
+        favorite:
+          type: boolean
+      example:
+        "23":
+          watched: true
+          favorite: false
+    inline_response_200_4:
+      required:
+      - favorite
+      - watched
+      properties:
+        watched:
+          type: boolean
+        favorite:
+          type: boolean
+      example:
+        "23":
+          watched: true
+          favorite: false
+    inline_response_200_5:
+      type: object
+      properties:
+        "2":
+          $ref: '#/components/schemas/PriviewPrivateRecipe'
+    inline_response_200_6:
+      type: object
+      properties:
+        "2":
+          $ref: '#/components/schemas/PriviewFamliyRecipe'
+    inline_response_200_7:
+      type: object
+      properties:
+        "2":
+          $ref: '#/components/schemas/MyRecipeInfo'
+    inline_response_200_8:
+      type: object
+      properties:
+        "111":
+          $ref: '#/components/schemas/FamilyRecipeInfo'
+    inline_response_200_9:
+      required:
+      - favorite
+      - watched
+      properties:
+        watched:
+          type: boolean
+        favorite:
+          type: boolean
+      example:
+        id: 123
+        watched: true
+        favorite: false
+    RecipeInfo_ingredients:
+      type: object
+      properties:
+        name:
+          type: string
+          example: eggs
+        amount:
+          type: number
+          example: 2
+        unit:
+          type: string
+    MyRecipeInfo_ingredients:
+      type: object
+      properties:
+        name:
+          type: string
+          example: flour
+        amount:
+          type: number
+          example: 4
+        unit:
+          type: string
+          example: cups
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      name: session
+      in: cookie
